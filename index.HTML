@@ -1,0 +1,1191 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>SmartCAM</title>
+
+  <style>
+    :root{
+      --green:#39f2a2;
+      --cyan:#4cc9ff;
+      --line:rgba(255,255,255,.15);
+      --shadow:0 14px 36px rgba(0,0,0,.36);
+    }
+
+    *{box-sizing:border-box}
+
+    html,body{
+      margin:0;
+      padding:0;
+      width:100%;
+      height:100%;
+      overflow:hidden;
+      background:#000;
+      color:#fff;
+      font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;
+    }
+
+    .app{
+      position:relative;
+      width:100vw;
+      height:100vh;
+      overflow:hidden;
+      background:
+        radial-gradient(circle at 15% 10%,rgba(76,201,255,.14),transparent 28%),
+        radial-gradient(circle at 85% 12%,rgba(57,242,162,.12),transparent 28%),
+        #02070d;
+    }
+
+    #video{
+      position:fixed;
+      inset:0;
+      width:100vw;
+      height:100vh;
+      object-fit:cover;
+      background:#000;
+      z-index:1;
+    }
+
+    .tech-overlay{
+      position:fixed;
+      inset:0;
+      z-index:2;
+      pointer-events:none;
+      background:
+        linear-gradient(to bottom,rgba(0,0,0,.30),transparent 22%,transparent 70%,rgba(0,0,0,.24)),
+        linear-gradient(120deg,rgba(76,201,255,.05) 0,transparent 20%,transparent 80%,rgba(57,242,162,.06) 100%);
+    }
+
+    .scan-line{
+      position:fixed;
+      left:-20%;
+      width:140%;
+      height:2px;
+      z-index:3;
+      pointer-events:none;
+      background:linear-gradient(90deg,transparent,rgba(76,201,255,.78),transparent);
+      box-shadow:0 0 18px rgba(76,201,255,.55);
+      opacity:.38;
+      animation:scanMove 5.5s linear infinite;
+    }
+
+    @keyframes scanMove{
+      0%{top:16%}
+      50%{top:78%}
+      100%{top:16%}
+    }
+
+    .top-wrap{
+      position:fixed;
+      top:0;
+      left:0;
+      right:0;
+      z-index:12;
+      padding:calc(10px + env(safe-area-inset-top)) 12px 0;
+      pointer-events:none;
+    }
+
+    .top-bar{
+      max-width:980px;
+      margin:0 auto;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      pointer-events:auto;
+    }
+
+    .brand{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      min-width:132px;
+      max-width:190px;
+      height:58px;
+      padding:7px 14px;
+      border-radius:999px;
+      background:rgba(5,12,22,.56);
+      border:1px solid var(--line);
+      backdrop-filter:blur(16px);
+      -webkit-backdrop-filter:blur(16px);
+      box-shadow:var(--shadow);
+    }
+
+    .brand-logo{
+      width:100%;
+      max-width:160px;
+      height:42px;
+      object-fit:contain;
+      display:none;
+    }
+
+    .brand-text{
+      font-size:20px;
+      font-weight:900;
+      letter-spacing:.4px;
+      background:linear-gradient(135deg,var(--green),var(--cyan));
+      -webkit-background-clip:text;
+      background-clip:text;
+      color:transparent;
+      line-height:1;
+    }
+
+    .status-pill{
+      max-width:62%;
+      padding:10px 13px;
+      border-radius:999px;
+      background:rgba(5,12,22,.56);
+      border:1px solid var(--line);
+      backdrop-filter:blur(16px);
+      -webkit-backdrop-filter:blur(16px);
+      box-shadow:var(--shadow);
+      color:#dff9ff;
+      font-size:12px;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+
+    .status-pill.warn{color:#ffedd5}
+
+    .form-panel{
+      position:fixed;
+      left:12px;
+      right:12px;
+      bottom:calc(92px + env(safe-area-inset-bottom));
+      z-index:13;
+      max-width:540px;
+      margin:0 auto;
+      padding:14px;
+      border-radius:24px;
+      background:linear-gradient(180deg,rgba(8,18,30,.68),rgba(4,10,18,.55));
+      border:1px solid rgba(255,255,255,.15);
+      backdrop-filter:blur(18px);
+      -webkit-backdrop-filter:blur(18px);
+      box-shadow:var(--shadow);
+    }
+
+    .panel-title{
+      margin-bottom:10px;
+      font-size:14px;
+      font-weight:900;
+      color:#ddfaff;
+      letter-spacing:.2px;
+    }
+
+    .readonly-box{
+      padding:10px 12px;
+      margin-bottom:12px;
+      border-radius:16px;
+      background:linear-gradient(135deg,rgba(57,242,162,.16),rgba(76,201,255,.12));
+      border:1px solid rgba(76,201,255,.24);
+      font-size:12px;
+      line-height:1.55;
+      color:#f7fdff;
+    }
+
+    label{
+      display:block;
+      margin-bottom:6px;
+      font-size:12px;
+      font-weight:900;
+      color:#d7f7ea;
+    }
+
+    input,textarea{
+      width:100%;
+      border:1px solid rgba(255,255,255,.16);
+      background:rgba(255,255,255,.10);
+      color:#fff;
+      border-radius:16px;
+      padding:12px 14px;
+      font-size:15px;
+      outline:none;
+    }
+
+    input{margin-bottom:10px}
+
+    textarea{
+      min-height:82px;
+      max-height:128px;
+      resize:vertical;
+    }
+
+    input::placeholder,textarea::placeholder{
+      color:rgba(255,255,255,.55);
+    }
+
+    .button-bar{
+      position:fixed;
+      left:0;
+      right:0;
+      bottom:0;
+      z-index:14;
+      max-width:640px;
+      margin:0 auto;
+      padding:10px 12px calc(12px + env(safe-area-inset-bottom));
+      display:grid;
+      grid-template-columns:1fr 78px 1fr;
+      align-items:center;
+      gap:10px;
+      background:linear-gradient(to top,rgba(0,0,0,.82),transparent);
+    }
+
+    button{
+      border:1px solid rgba(255,255,255,.16);
+      border-radius:18px;
+      padding:13px 10px;
+      font-size:14px;
+      font-weight:900;
+      color:#fff;
+      cursor:pointer;
+      backdrop-filter:blur(14px);
+      -webkit-backdrop-filter:blur(14px);
+      box-shadow:var(--shadow);
+    }
+
+    button:active{transform:scale(.985)}
+
+    .btn-blue{
+      background:linear-gradient(135deg,rgba(37,99,235,.84),rgba(76,201,255,.56));
+    }
+
+    .btn-green{
+      background:linear-gradient(135deg,rgba(22,163,74,.88),rgba(57,242,162,.54));
+    }
+
+    .capture-btn{
+      width:78px;
+      height:78px;
+      border-radius:50%;
+      padding:0;
+      background:rgba(255,255,255,.96);
+      border:6px solid rgba(255,255,255,.28);
+      position:relative;
+    }
+
+    .capture-btn::before{
+      content:"";
+      position:absolute;
+      inset:11px;
+      border-radius:50%;
+      background:radial-gradient(circle at 35% 35%,#ff9a9a 0%,#ef4444 48%,#c91414 100%);
+      box-shadow:inset 0 0 0 1px rgba(255,255,255,.34);
+    }
+
+    #canvas{display:none}
+
+    .modal{
+      position:fixed;
+      inset:0;
+      z-index:30;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:20px;
+      background:
+        radial-gradient(circle at 20% 10%,rgba(76,201,255,.14),transparent 35%),
+        rgba(1,6,12,.94);
+      backdrop-filter:blur(6px);
+      -webkit-backdrop-filter:blur(6px);
+    }
+
+    .modal.hide{display:none}
+
+    .modal-card{
+      width:100%;
+      max-width:460px;
+      padding:22px;
+      border-radius:26px;
+      text-align:center;
+      background:linear-gradient(180deg,rgba(10,22,38,.96),rgba(6,12,22,.92));
+      border:1px solid rgba(255,255,255,.14);
+      box-shadow:var(--shadow);
+    }
+
+    .modal-logo{
+      width:min(220px,70vw);
+      height:80px;
+      object-fit:contain;
+      margin:0 auto 12px;
+      display:none;
+    }
+
+    .modal-mark{
+      width:160px;
+      height:56px;
+      margin:0 auto 12px;
+      display:grid;
+      place-items:center;
+      border-radius:18px;
+      font-size:22px;
+      font-weight:900;
+      color:#04120c;
+      background:linear-gradient(135deg,var(--green),var(--cyan));
+      box-shadow:0 0 32px rgba(57,242,162,.26);
+    }
+
+    .modal-card h1{
+      margin:0 0 10px;
+      font-size:24px;
+    }
+
+    .modal-card p{
+      margin:0 0 16px;
+      color:#d4dce7;
+      line-height:1.7;
+      font-size:14px;
+    }
+
+    .quick-permission{
+      display:grid;
+      gap:8px;
+      margin:12px 0;
+      text-align:left;
+    }
+
+    .quick-permission div{
+      padding:10px 12px;
+      border-radius:14px;
+      background:rgba(255,255,255,.08);
+      border:1px solid rgba(255,255,255,.12);
+      color:#f8fafc;
+      font-size:14px;
+      line-height:1.45;
+    }
+
+    .privacy-note{
+      margin-top:10px!important;
+      padding:10px 12px;
+      border-radius:14px;
+      background:rgba(57,242,162,.10);
+      border:1px solid rgba(57,242,162,.22);
+      color:#dffcef!important;
+      font-size:13px!important;
+      line-height:1.55!important;
+      text-align:left;
+    }
+
+    .file-input{
+      width:100%;
+      margin:12px 0;
+      padding:12px;
+      color:#fff;
+      border-radius:16px;
+      background:rgba(255,255,255,.08);
+      border:1px solid rgba(255,255,255,.14);
+    }
+
+    .tip{
+      margin-top:12px;
+      color:#b8c6d3;
+      font-size:12px;
+      line-height:1.55;
+    }
+
+    @media (orientation:landscape){
+      .status-pill{max-width:50%}
+
+      .form-panel{
+        left:auto;
+        right:calc(14px + env(safe-area-inset-right));
+        width:min(410px,38vw);
+        max-width:none;
+        bottom:calc(92px + env(safe-area-inset-bottom));
+      }
+
+      textarea{
+        min-height:62px;
+        max-height:92px;
+      }
+
+      .button-bar{
+        width:min(580px,70vw);
+      }
+    }
+
+    @media (max-width:480px){
+      .brand{
+        min-width:118px;
+        height:52px;
+        padding:6px 10px;
+      }
+
+      .brand-logo{
+        max-width:138px;
+        height:38px;
+      }
+
+      .brand-text{font-size:18px}
+
+      .status-pill{
+        max-width:58%;
+        font-size:11px;
+      }
+
+      .readonly-box{font-size:11px}
+    }
+  </style>
+</head>
+
+<body>
+  <div class="app">
+    <video id="video" autoplay playsinline muted></video>
+    <div class="tech-overlay"></div>
+    <div class="scan-line"></div>
+
+    <div class="top-wrap">
+      <div class="top-bar">
+        <div class="brand">
+          <img id="brandLogo" class="brand-logo" alt="SmartCAM Logo">
+          <div id="brandText" class="brand-text">SmartCAM</div>
+        </div>
+
+        <div id="statusBox" class="status-pill warn">แตะเริ่มใช้งาน</div>
+      </div>
+    </div>
+
+    <div class="form-panel">
+      <div class="panel-title">บันทึกข้อมูลภาพ</div>
+
+      <div id="readonlyData" class="readonly-box">
+        เวลา: กำลังโหลด...<br>
+        UTM: กำลังอ่านพิกัด...<br>
+        ACC: -
+      </div>
+
+      <label for="nameText">1. ชื่อ</label>
+      <input id="nameText" type="text" placeholder="กรอกชื่อ เช่น ชื่อเกษตรกร / ชื่อกิจกรรม / ชื่อจุดสำรวจ">
+
+      <label for="detailText">2. รายละเอียด</label>
+      <textarea id="detailText" placeholder="กรอกรายละเอียด เช่น สถานที่ ชนิดพืช สภาพแปลง หรือหมายเหตุ"></textarea>
+    </div>
+
+    <div class="button-bar">
+      <button class="btn-blue" onclick="switchCamera()">สลับกล้อง</button>
+      <button class="capture-btn" onclick="captureAndSave()" aria-label="ถ่ายภาพ"></button>
+      <button class="btn-green" onclick="refreshLocation()">พิกัดใหม่</button>
+    </div>
+
+    <canvas id="canvas"></canvas>
+  </div>
+
+  <div id="startModal" class="modal">
+    <div class="modal-card">
+      <img id="modalLogo" class="modal-logo" alt="SmartCAM Logo">
+      <div id="modalMark" class="modal-mark">SmartCAM</div>
+
+      <h1>เริ่มใช้งาน SmartCAM</h1>
+
+      <p id="browserGuideText">
+        แตะปุ่มด้านล่างเพื่ออนุญาตการใช้กล้องและตำแหน่งที่ตั้ง
+      </p>
+
+      <div class="quick-permission">
+        <div>📷 ใช้กล้องเพื่อถ่ายภาพ</div>
+        <div>📍 ใช้ตำแหน่งเพื่อบันทึกพิกัด UTM</div>
+        <div>🕒 ใช้วันเวลาเพื่อประทับลงบนภาพ</div>
+      </div>
+
+      <p class="privacy-note">
+        เมื่อกดเริ่มใช้งาน เบราว์เซอร์จะขอสิทธิ์กล้องและตำแหน่งที่ตั้งจากผู้ใช้โดยตรง
+      </p>
+
+      <button class="btn-green" style="width:100%;" onclick="startSmartCAMFast()">
+        ยินยอมและเปิดกล้อง
+      </button>
+
+      <button
+        id="openChromeBtn"
+        class="btn-blue"
+        style="width:100%;margin-top:10px;display:none;"
+        onclick="openInChromeAndroid()"
+      >
+        เปิดด้วย Chrome
+      </button>
+
+      <div id="browserGuideNote" class="tip">
+        หากเปิดผ่าน LINE / Facebook / Messenger แล้วกล้องไม่ทำงาน แนะนำให้เปิดด้วย Chrome หรือ Safari โดยตรง
+      </div>
+    </div>
+  </div>
+
+  <div id="fallbackModal" class="modal hide">
+    <div class="modal-card">
+      <div class="modal-mark">SmartCAM</div>
+      <h1>ไม่สามารถเปิดกล้องได้</h1>
+      <p id="fallbackMessage">กรุณาอนุญาตการเข้าถึงกล้องและตำแหน่งที่ตั้ง</p>
+
+      <button class="btn-green" style="width:100%;" onclick="startSmartCAMFast()">
+        ลองเปิดกล้องอีกครั้ง
+      </button>
+
+      <button
+        id="fallbackChromeBtn"
+        class="btn-blue"
+        style="width:100%;margin-top:10px;display:none;"
+        onclick="openInChromeAndroid()"
+      >
+        เปิดด้วย Chrome
+      </button>
+
+      <input class="file-input" type="file" accept="image/*" capture="environment" onchange="loadImageFromFile(event)">
+
+      <div class="tip">
+        หากกล้องยังไม่เปิด ให้ใช้ปุ่มเลือกไฟล์/ถ่ายรูปจากกล้องแทน ระบบจะยังสามารถประทับข้อมูลลงบนภาพได้
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const LOGO_URL = "./assets/logo.png";
+
+    const video = document.getElementById("video");
+    const canvas = document.getElementById("canvas");
+    const statusBox = document.getElementById("statusBox");
+    const readonlyData = document.getElementById("readonlyData");
+    const startModal = document.getElementById("startModal");
+    const fallbackModal = document.getElementById("fallbackModal");
+    const fallbackMessage = document.getElementById("fallbackMessage");
+    const brandLogo = document.getElementById("brandLogo");
+    const brandText = document.getElementById("brandText");
+    const modalLogo = document.getElementById("modalLogo");
+    const modalMark = document.getElementById("modalMark");
+
+    let stream = null;
+    let facingMode = "environment";
+    let currentPosition = null;
+    let currentUTM = null;
+    let currentACC = null;
+    let loadedImageElement = null;
+    let liveClockTimer = null;
+    let logoImage = null;
+
+    window.addEventListener("load", async () => {
+      startLiveClock();
+      await loadLogo();
+      updateReadonlyData();
+      updateBrowserGuide();
+
+      statusBox.className = "status-pill warn";
+      statusBox.textContent = "แตะเริ่มใช้งาน";
+    });
+
+    window.addEventListener("orientationchange", () => {
+      setTimeout(updateReadonlyData, 300);
+    });
+
+    window.addEventListener("resize", () => {
+      updateReadonlyData();
+    });
+
+    function isInAppBrowser() {
+      const ua = navigator.userAgent || "";
+      return /Line|FBAN|FBAV|Instagram|Messenger|MicroMessenger|TikTok/i.test(ua);
+    }
+
+    function isAndroid() {
+      return /Android/i.test(navigator.userAgent || "");
+    }
+
+    function isIOS() {
+      return /iPhone|iPad|iPod/i.test(navigator.userAgent || "");
+    }
+
+    function openInChromeAndroid() {
+      const currentUrl = window.location.href.replace(/^https?:\/\//, "");
+      const intentUrl =
+        "intent://" + currentUrl +
+        "#Intent;scheme=https;package=com.android.chrome;end";
+
+      window.location.href = intentUrl;
+    }
+
+    function updateBrowserGuide() {
+      const guideText = document.getElementById("browserGuideText");
+      const guideNote = document.getElementById("browserGuideNote");
+      const chromeBtn = document.getElementById("openChromeBtn");
+      const fallbackChromeBtn = document.getElementById("fallbackChromeBtn");
+
+      if (!guideText || !guideNote || !chromeBtn) return;
+
+      if (isInAppBrowser()) {
+        guideText.innerHTML =
+          "ตรวจพบว่ากำลังเปิดผ่านแอปอื่น เช่น LINE / Facebook<br>" +
+          "เพื่อให้กล้องและ GPS ทำงานเสถียร ควรเปิดด้วยเบราว์เซอร์หลัก";
+
+        if (isAndroid()) {
+          chromeBtn.style.display = "block";
+          if (fallbackChromeBtn) fallbackChromeBtn.style.display = "block";
+          guideNote.innerHTML =
+            "กดปุ่ม “เปิดด้วย Chrome” หรือกดเมนู ⋮ แล้วเลือกเปิดในเบราว์เซอร์";
+        } else if (isIOS()) {
+          chromeBtn.style.display = "none";
+          if (fallbackChromeBtn) fallbackChromeBtn.style.display = "none";
+          guideNote.innerHTML =
+            "บน iPhone/iPad ให้กดปุ่มแชร์ แล้วเลือก “เปิดใน Safari” หรือคัดลอกลิงก์ไปเปิดใน Safari";
+        }
+      }
+    }
+
+    function loadLogo() {
+      return new Promise((resolve) => {
+        const img = new Image();
+
+        img.onload = () => {
+          logoImage = img;
+
+          brandLogo.src = LOGO_URL;
+          brandLogo.style.display = "block";
+          brandText.style.display = "none";
+
+          modalLogo.src = LOGO_URL;
+          modalLogo.style.display = "block";
+          modalMark.style.display = "none";
+
+          resolve(img);
+        };
+
+        img.onerror = () => {
+          logoImage = null;
+          brandLogo.style.display = "none";
+          brandText.style.display = "block";
+          modalLogo.style.display = "none";
+          modalMark.style.display = "grid";
+          resolve(null);
+        };
+
+        img.src = LOGO_URL + "?v=" + Date.now();
+      });
+    }
+
+    async function startSmartCAMFast() {
+      startModal.classList.add("hide");
+      fallbackModal.classList.add("hide");
+
+      statusBox.className = "status-pill warn";
+      statusBox.textContent = "กำลังเปิดกล้องและอ่านพิกัด...";
+
+      const cameraPromise = startCamera();
+      const locationPromise = refreshLocation();
+
+      await Promise.allSettled([cameraPromise, locationPromise]);
+    }
+
+    function startLiveClock() {
+      updateReadonlyData();
+
+      if (liveClockTimer) clearInterval(liveClockTimer);
+      liveClockTimer = setInterval(updateReadonlyData, 1000);
+    }
+
+    function updateReadonlyData() {
+      const nowText = formatShortThaiDateTime(new Date());
+
+      let utmText = "กำลังอ่านพิกัด...";
+      let accText = "-";
+
+      if (currentUTM) {
+        utmText =
+          `Zone ${currentUTM.zone}${currentUTM.hemisphere} ` +
+          `X ${Math.round(currentUTM.easting)} ` +
+          `Y ${Math.round(currentUTM.northing)}`;
+      }
+
+      if (currentACC !== null && currentACC !== undefined) {
+        accText = `±${Math.round(currentACC)}m`;
+      }
+
+      readonlyData.innerHTML =
+        `เวลา: ${nowText}<br>` +
+        `UTM: ${utmText}<br>` +
+        `ACC: ${accText}`;
+    }
+
+    async function startCamera() {
+      try {
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+          showFallback("เบราว์เซอร์นี้ไม่รองรับการเปิดกล้องโดยตรง");
+          return;
+        }
+
+        stopCamera();
+
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            facingMode: { ideal: facingMode },
+            width: { ideal: 1920 },
+            height: { ideal: 1080 }
+          },
+          audio: false
+        });
+
+        video.srcObject = stream;
+        loadedImageElement = null;
+        await video.play();
+
+        statusBox.className = "status-pill";
+        statusBox.textContent = "กล้องพร้อมใช้งาน";
+      } catch (error) {
+        console.error(error);
+        showFallback("ไม่สามารถเปิดกล้องได้ กรุณาอนุญาตกล้อง/ตำแหน่งที่ตั้ง หรือเปิดผ่าน HTTPS");
+      }
+    }
+
+    function showFallback(message) {
+      statusBox.className = "status-pill warn";
+      statusBox.textContent = "ไม่สามารถเปิดกล้องได้";
+
+      fallbackMessage.innerHTML =
+        `${message}<br><br>` +
+        `หากเปิดผ่าน LINE / Facebook / Messenger<br>` +
+        `กรุณาเปิดด้วย Chrome หรือ Safari โดยตรง`;
+
+      fallbackModal.classList.remove("hide");
+
+      const fallbackChromeBtn = document.getElementById("fallbackChromeBtn");
+      if (fallbackChromeBtn) {
+        fallbackChromeBtn.style.display = isAndroid() ? "block" : "none";
+      }
+    }
+
+    function stopCamera() {
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+        stream = null;
+      }
+    }
+
+    async function switchCamera() {
+      facingMode = facingMode === "environment" ? "user" : "environment";
+      await startCamera();
+    }
+
+    function refreshLocation() {
+      if (!navigator.geolocation) {
+        statusBox.className = "status-pill warn";
+        statusBox.textContent = "อุปกรณ์นี้ไม่รองรับ GPS";
+        return Promise.resolve();
+      }
+
+      statusBox.className = "status-pill warn";
+      statusBox.textContent = "กำลังอ่านพิกัด GPS...";
+
+      return new Promise((resolve) => {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            currentPosition = position;
+            currentACC = position.coords.accuracy;
+
+            currentUTM = latLonToUTM(
+              position.coords.latitude,
+              position.coords.longitude
+            );
+
+            updateReadonlyData();
+
+            statusBox.className = "status-pill";
+            statusBox.textContent =
+              `UTM ${currentUTM.zone}${currentUTM.hemisphere} ` +
+              `X ${Math.round(currentUTM.easting)} ` +
+              `Y ${Math.round(currentUTM.northing)} ` +
+              `ACC ±${Math.round(currentACC)}m`;
+
+            resolve();
+          },
+          (error) => {
+            console.error(error);
+            statusBox.className = "status-pill warn";
+            statusBox.textContent = "ไม่สามารถอ่านพิกัดได้ กรุณาอนุญาตตำแหน่งที่ตั้ง";
+            resolve();
+          },
+          {
+            enableHighAccuracy: true,
+            timeout: 20000,
+            maximumAge: 0
+          }
+        );
+      });
+    }
+
+    function loadImageFromFile(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const img = new Image();
+      const reader = new FileReader();
+
+      reader.onload = function(e) {
+        img.onload = function() {
+          loadedImageElement = img;
+          stopCamera();
+          fallbackModal.classList.add("hide");
+
+          statusBox.className = "status-pill";
+          statusBox.textContent = "เลือกรูปเรียบร้อยแล้ว กดปุ่มถ่ายภาพเพื่อบันทึก";
+        };
+
+        img.src = e.target.result;
+      };
+
+      reader.readAsDataURL(file);
+      refreshLocation();
+    }
+
+    async function captureAndSave() {
+      if (!currentPosition || !currentUTM) {
+        alert("ยังไม่มีพิกัด UTM กรุณากดพิกัดใหม่ก่อนถ่ายภาพ");
+        return;
+      }
+
+      const captureTime = new Date();
+
+      let sourceWidth = 0;
+      let sourceHeight = 0;
+
+      if (loadedImageElement) {
+        sourceWidth = loadedImageElement.naturalWidth;
+        sourceHeight = loadedImageElement.naturalHeight;
+      } else {
+        if (!stream) {
+          alert("ยังไม่มีกล้อง กรุณาเปิดกล้องหรือเลือกรูปจากกล้องก่อน");
+          return;
+        }
+
+        sourceWidth = video.videoWidth;
+        sourceHeight = video.videoHeight;
+      }
+
+      if (!sourceWidth || !sourceHeight) {
+        alert("กล้องยังไม่พร้อม กรุณารอสักครู่แล้วลองใหม่");
+        return;
+      }
+
+      const maxWidth = 1920;
+      const scale = sourceWidth > maxWidth ? maxWidth / sourceWidth : 1;
+
+      canvas.width = Math.round(sourceWidth * scale);
+      canvas.height = Math.round(sourceHeight * scale);
+
+      const ctx = canvas.getContext("2d");
+
+      if (loadedImageElement) {
+        ctx.drawImage(loadedImageElement, 0, 0, canvas.width, canvas.height);
+      } else {
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      }
+
+      drawDataOnPhoto(ctx, canvas.width, canvas.height, captureTime);
+
+      canvas.toBlob((blob) => {
+        if (!blob) {
+          alert("ไม่สามารถสร้างไฟล์ภาพได้");
+          return;
+        }
+
+        const fileName = createFileName(captureTime);
+        saveBlobToDevice(blob, fileName);
+
+        statusBox.className = "status-pill";
+        statusBox.textContent = `บันทึกภาพแล้ว: ${fileName}`;
+      }, "image/jpeg", 0.94);
+    }
+
+    function drawDataOnPhoto(ctx, width, height, captureTime) {
+      const nameText = getValue("nameText");
+      const detailText = getValue("detailText");
+      const timeText = formatShortThaiDateTime(captureTime);
+
+      const utmLine =
+        `UTM ${currentUTM.zone}${currentUTM.hemisphere} ` +
+        `X ${Math.round(currentUTM.easting)} ` +
+        `Y ${Math.round(currentUTM.northing)}`;
+
+      const accLine =
+        currentACC !== null && currentACC !== undefined
+          ? `ACC ±${Math.round(currentACC)}m`
+          : `ACC -`;
+
+      const isLandscape = width > height;
+      const boxHeight = Math.round(height * 0.30);
+      const boxWidth = isLandscape ? Math.round(width * 0.60) : Math.round(width * 0.92);
+
+      const margin = Math.round(Math.min(width, height) * 0.03);
+      const x = margin;
+      const y = height - boxHeight - margin;
+      const padding = Math.round(boxHeight * 0.07);
+
+      const brandH = Math.round(boxHeight * 0.14);
+      const nameFont = Math.max(18, Math.round(boxHeight * 0.095));
+      const detailFont = Math.max(16, Math.round(boxHeight * 0.078));
+      const metaFont = Math.max(15, Math.round(boxHeight * 0.070));
+
+      const textX = x + padding;
+      const textMaxWidth = boxWidth - padding * 2;
+
+      drawGlassBox(ctx, x, y, boxWidth, boxHeight, Math.round(padding * 0.9));
+
+      let cursorY = y + padding;
+
+      if (logoImage) {
+        const logoDrawn = drawLogoFit(ctx, logoImage, textX, cursorY, Math.round(boxWidth * 0.46), brandH);
+        cursorY += logoDrawn.height + Math.round(padding * 0.35);
+      } else {
+        const badgeDrawn = drawSmartCAMBadge(ctx, textX, cursorY, Math.round(boxWidth * 0.42), brandH);
+        cursorY += badgeDrawn.height + Math.round(padding * 0.35);
+      }
+
+      ctx.textBaseline = "top";
+
+      ctx.font = `800 ${nameFont}px Arial, sans-serif`;
+      ctx.fillStyle = "rgba(255,255,255,0.98)";
+      const nameLine = wrapText(ctx, `ชื่อ: ${nameText}`, textMaxWidth).slice(0, 1);
+      ctx.fillText(nameLine[0] || "ชื่อ: -", textX, cursorY);
+      cursorY += Math.round(nameFont * 1.22);
+
+      ctx.font = `700 ${detailFont}px Arial, sans-serif`;
+      ctx.fillStyle = "rgba(255,255,255,0.95)";
+      const detailLines = wrapText(ctx, `รายละเอียด: ${detailText}`, textMaxWidth).slice(0, 2);
+
+      detailLines.forEach((line) => {
+        ctx.fillText(line, textX, cursorY);
+        cursorY += Math.round(detailFont * 1.20);
+      });
+
+      const metaBlockHeight = Math.round(metaFont * 2.55);
+      const metaStartY = y + boxHeight - padding - metaBlockHeight;
+
+      ctx.font = `800 ${metaFont}px Arial, sans-serif`;
+      ctx.fillStyle = "rgba(190,255,231,0.98)";
+      ctx.fillText(`เวลา: ${timeText}`, textX, metaStartY);
+
+      ctx.font = `800 ${metaFont}px Arial, sans-serif`;
+      ctx.fillStyle = "rgba(220,247,255,0.98)";
+
+      const compactUtmAcc = `${utmLine}  ${accLine}`;
+      const metaLines = wrapText(ctx, compactUtmAcc, textMaxWidth).slice(0, 2);
+
+      metaLines.forEach((line, index) => {
+        ctx.fillText(
+          line,
+          textX,
+          metaStartY + Math.round(metaFont * 1.25) + index * Math.round(metaFont * 1.15)
+        );
+      });
+
+      const glow = ctx.createLinearGradient(x + padding, y + 10, x + boxWidth - padding, y + 10);
+      glow.addColorStop(0, "rgba(57,242,162,0.95)");
+      glow.addColorStop(1, "rgba(76,201,255,0.95)");
+      ctx.fillStyle = glow;
+      ctx.fillRect(x + padding, y + 12, Math.round(boxWidth * 0.26), 4);
+    }
+
+    function drawLogoFit(ctx, img, x, y, maxW, maxH) {
+      const ratio = img.width / img.height;
+      let drawW = maxW;
+      let drawH = Math.round(drawW / ratio);
+
+      if (drawH > maxH) {
+        drawH = maxH;
+        drawW = Math.round(drawH * ratio);
+      }
+
+      ctx.drawImage(img, x, y, drawW, drawH);
+      return { width: drawW, height: drawH };
+    }
+
+    function drawSmartCAMBadge(ctx, x, y, maxW, h) {
+      ctx.save();
+
+      const text = "SmartCAM";
+      const r = Math.round(h * 0.24);
+
+      ctx.font = `900 ${Math.round(h * 0.46)}px Arial, sans-serif`;
+      const textWidth = ctx.measureText(text).width;
+      const w = Math.min(maxW, Math.round(textWidth + h * 0.90));
+
+      ctx.beginPath();
+      ctx.moveTo(x + r, y);
+      ctx.lineTo(x + w - r, y);
+      ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+      ctx.lineTo(x + w, y + h - r);
+      ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+      ctx.lineTo(x + r, y + h);
+      ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+      ctx.lineTo(x, y + r);
+      ctx.quadraticCurveTo(x, y, x + r, y);
+      ctx.closePath();
+
+      const g = ctx.createLinearGradient(x, y, x + w, y);
+      g.addColorStop(0, "rgba(57,242,162,0.96)");
+      g.addColorStop(1, "rgba(76,201,255,0.96)");
+      ctx.fillStyle = g;
+      ctx.fill();
+
+      ctx.fillStyle = "rgba(2,8,14,0.95)";
+      ctx.textBaseline = "middle";
+      ctx.fillText(text, x + Math.round(h * 0.30), y + h / 2);
+
+      ctx.restore();
+      return { width: w, height: h };
+    }
+
+    function drawGlassBox(ctx, x, y, w, h, r) {
+      ctx.save();
+
+      ctx.beginPath();
+      ctx.moveTo(x + r, y);
+      ctx.lineTo(x + w - r, y);
+      ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+      ctx.lineTo(x + w, y + h - r);
+      ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+      ctx.lineTo(x + r, y + h);
+      ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+      ctx.lineTo(x, y + r);
+      ctx.quadraticCurveTo(x, y, x + r, y);
+      ctx.closePath();
+
+      const bg = ctx.createLinearGradient(x, y, x, y + h);
+      bg.addColorStop(0, "rgba(5,14,24,0.62)");
+      bg.addColorStop(1, "rgba(0,5,10,0.78)");
+
+      ctx.fillStyle = bg;
+      ctx.fill();
+
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = "rgba(255,255,255,0.14)";
+      ctx.stroke();
+
+      ctx.shadowColor = "rgba(76,201,255,0.25)";
+      ctx.shadowBlur = 18;
+      ctx.strokeStyle = "rgba(76,201,255,0.14)";
+      ctx.stroke();
+
+      ctx.restore();
+    }
+
+    function wrapText(ctx, text, maxWidth) {
+      text = String(text || "");
+      if (!text) return ["-"];
+
+      const hasSpace = text.includes(" ");
+      const units = hasSpace ? text.split(" ") : Array.from(text);
+
+      const lines = [];
+      let line = "";
+
+      for (const unit of units) {
+        const testLine = hasSpace ? (line ? line + " " + unit : unit) : line + unit;
+
+        if (ctx.measureText(testLine).width > maxWidth && line) {
+          lines.push(line);
+          line = unit;
+        } else {
+          line = testLine;
+        }
+      }
+
+      if (line) lines.push(line);
+      return lines;
+    }
+
+    function getValue(id) {
+      const value = document.getElementById(id).value.trim();
+      return value || "-";
+    }
+
+    function saveBlobToDevice(blob, fileName) {
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = fileName;
+      link.style.display = "none";
+
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      setTimeout(() => {
+        URL.revokeObjectURL(url);
+      }, 1500);
+    }
+
+    function createFileName(date) {
+      const y = date.getFullYear();
+      const m = String(date.getMonth() + 1).padStart(2, "0");
+      const d = String(date.getDate()).padStart(2, "0");
+      const h = String(date.getHours()).padStart(2, "0");
+      const min = String(date.getMinutes()).padStart(2, "0");
+      const s = String(date.getSeconds()).padStart(2, "0");
+      return `SmartCAM_${y}${m}${d}_${h}${min}${s}.jpg`;
+    }
+
+    function formatShortThaiDateTime(date) {
+      const d = String(date.getDate()).padStart(2, "0");
+      const m = String(date.getMonth() + 1).padStart(2, "0");
+      const y = date.getFullYear() + 543;
+      const h = String(date.getHours()).padStart(2, "0");
+      const min = String(date.getMinutes()).padStart(2, "0");
+      const s = String(date.getSeconds()).padStart(2, "0");
+      return `${d}/${m}/${y} ${h}:${min}:${s}`;
+    }
+
+    function degToRad(deg) {
+      return deg * Math.PI / 180;
+    }
+
+    function latLonToUTM(lat, lon) {
+      const a = 6378137.0;
+      const f = 1 / 298.257223563;
+      const k0 = 0.9996;
+
+      const e = Math.sqrt(f * (2 - f));
+      const eSq = e * e;
+      const ePrimeSq = eSq / (1 - eSq);
+
+      const zone = Math.floor((lon + 180) / 6) + 1;
+      const lonOrigin = (zone - 1) * 6 - 180 + 3;
+
+      const latRad = degToRad(lat);
+      const lonRad = degToRad(lon);
+      const lonOriginRad = degToRad(lonOrigin);
+
+      const sinLat = Math.sin(latRad);
+      const cosLat = Math.cos(latRad);
+      const tanLat = Math.tan(latRad);
+
+      const N = a / Math.sqrt(1 - eSq * sinLat * sinLat);
+      const T = tanLat * tanLat;
+      const C = ePrimeSq * cosLat * cosLat;
+      const A = cosLat * (lonRad - lonOriginRad);
+
+      const M = a * (
+        (1 - eSq / 4 - 3 * Math.pow(eSq, 2) / 64 - 5 * Math.pow(eSq, 3) / 256) * latRad
+        - (3 * eSq / 8 + 3 * Math.pow(eSq, 2) / 32 + 45 * Math.pow(eSq, 3) / 1024) * Math.sin(2 * latRad)
+        + (15 * Math.pow(eSq, 2) / 256 + 45 * Math.pow(eSq, 3) / 1024) * Math.sin(4 * latRad)
+        - (35 * Math.pow(eSq, 3) / 3072) * Math.sin(6 * latRad)
+      );
+
+      let easting = k0 * N * (
+        A
+        + (1 - T + C) * Math.pow(A, 3) / 6
+        + (5 - 18 * T + T * T + 72 * C - 58 * ePrimeSq) * Math.pow(A, 5) / 120
+      ) + 500000.0;
+
+      let northing = k0 * (
+        M + N * tanLat * (
+          Math.pow(A, 2) / 2
+          + (5 - T + 9 * C + 4 * C * C) * Math.pow(A, 4) / 24
+          + (61 - 58 * T + T * T + 600 * C - 330 * ePrimeSq) * Math.pow(A, 6) / 720
+        )
+      );
+
+      const hemisphere = lat >= 0 ? "N" : "S";
+      if (lat < 0) northing += 10000000.0;
+
+      return { zone, hemisphere, easting, northing };
+    }
+  </script>
+</body>
+</html>
