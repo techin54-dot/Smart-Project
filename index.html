@@ -1158,35 +1158,35 @@
 
       const isLandscape = width > height;
 
+      // โลโก้มุมซ้ายบน
       drawTopLeftLogo(ctx, width, height, isLandscape);
 
-      const margin = Math.round(Math.min(width, height) * 0.03);
+      const baseSize = Math.min(width, height);
+      const margin = Math.round(baseSize * 0.03);
 
       const boxWidth = isLandscape
         ? Math.round(width * 0.58)
         : Math.round(width * 0.92);
 
-      const baseSize = Math.min(width, height);
-
+      // ขนาดตัวอักษร
       const nameFont = isLandscape
-        ? Math.max(18, Math.round(baseSize * 0.036))
-        : Math.max(24, Math.round(baseSize * 0.040));
+        ? Math.max(17, Math.round(baseSize * 0.034))
+        : Math.max(22, Math.round(baseSize * 0.036));
 
       const detailFont = isLandscape
-        ? Math.max(16, Math.round(baseSize * 0.030))
-        : Math.max(21, Math.round(baseSize * 0.034));
+        ? Math.max(15, Math.round(baseSize * 0.029))
+        : Math.max(20, Math.round(baseSize * 0.031));
 
       const metaFont = isLandscape
-        ? Math.max(15, Math.round(baseSize * 0.028))
-        : Math.max(19, Math.round(baseSize * 0.031));
+        ? Math.max(14, Math.round(baseSize * 0.026))
+        : Math.max(18, Math.round(baseSize * 0.028));
 
-      const padding = Math.round(baseSize * 0.030);
-      const lineGapName = Math.round(nameFont * 1.22);
-      const lineGapDetail = Math.round(detailFont * 1.18);
-      const lineGapMeta = Math.round(metaFont * 1.18);
+      // padding ให้กระชับขึ้น
+      const paddingX = Math.round(baseSize * 0.030);
+      const paddingY = Math.round(baseSize * 0.024);
+      const textMaxWidth = boxWidth - paddingX * 2;
 
-      const textMaxWidth = boxWidth - padding * 2;
-
+      // เตรียมข้อความจริง
       ctx.font = `800 ${nameFont}px Arial, sans-serif`;
       const nameLines = wrapText(ctx, `ชื่อ: ${nameText}`, textMaxWidth).slice(0, 1);
 
@@ -1194,35 +1194,39 @@
       const detailLines = wrapText(ctx, `รายละเอียด: ${detailText}`, textMaxWidth).slice(0, 2);
 
       ctx.font = `800 ${metaFont}px Arial, sans-serif`;
-      const metaLines = [
-        `เวลา: ${timeText}`,
-        ...wrapText(ctx, `${utmLine}  ${accLine}`, textMaxWidth).slice(0, 2)
-      ];
+      const timeLines = [`เวลา: ${timeText}`];
+      const utmLines = wrapText(ctx, `${utmLine}  ${accLine}`, textMaxWidth).slice(0, 2);
 
+      const lineGapName = Math.round(nameFont * 1.18);
+      const lineGapDetail = Math.round(detailFont * 1.16);
+      const lineGapMeta = Math.round(metaFont * 1.16);
+
+      const sectionGap = Math.round(metaFont * 0.42);
+
+      // คำนวณความสูงกล่องตามบรรทัดจริง
       let contentHeight = 0;
       contentHeight += nameLines.length * lineGapName;
       contentHeight += detailLines.length * lineGapDetail;
-      contentHeight += Math.round(metaFont * 0.45);
-      contentHeight += metaLines.length * lineGapMeta;
+      contentHeight += sectionGap;
+      contentHeight += timeLines.length * lineGapMeta;
+      contentHeight += utmLines.length * lineGapMeta;
 
-      let boxHeight = contentHeight + padding * 2;
+      let boxHeight = contentHeight + paddingY * 2;
 
-      const minBoxHeight = Math.round(height * 0.12);
-      const maxBoxHeight = Math.round(height * 0.34);
-
-      boxHeight = Math.max(minBoxHeight, boxHeight);
-      boxHeight = Math.min(maxBoxHeight, boxHeight);
+      // จำกัดความสูงบนสุดเท่านั้น ไม่บังคับขั้นต่ำสูง ๆ
+      const maxBoxHeight = Math.round(height * 0.28);
+      boxHeight = Math.min(boxHeight, maxBoxHeight);
 
       const x = margin;
       const y = height - boxHeight - margin;
-      const textX = x + padding;
+      const textX = x + paddingX;
 
-      drawGlassBox(ctx, x, y, boxWidth, boxHeight, Math.round(padding * 0.8));
+      drawGlassBox(ctx, x, y, boxWidth, boxHeight, Math.round(baseSize * 0.018));
 
-      let cursorY = y + padding;
-
+      let cursorY = y + paddingY;
       ctx.textBaseline = "top";
 
+      // ชื่อ
       ctx.font = `800 ${nameFont}px Arial, sans-serif`;
       ctx.fillStyle = "rgba(255,255,255,0.98)";
       nameLines.forEach(line => {
@@ -1230,6 +1234,7 @@
         cursorY += lineGapName;
       });
 
+      // รายละเอียด
       ctx.font = `700 ${detailFont}px Arial, sans-serif`;
       ctx.fillStyle = "rgba(255,255,255,0.95)";
       detailLines.forEach(line => {
@@ -1237,14 +1242,20 @@
         cursorY += lineGapDetail;
       });
 
-      cursorY += Math.round(metaFont * 0.45);
+      // เว้นระยะเล็กน้อย
+      cursorY += sectionGap;
 
+      // เวลา
       ctx.font = `800 ${metaFont}px Arial, sans-serif`;
-      metaLines.forEach((line, index) => {
-        ctx.fillStyle = index === 0
-          ? "rgba(190,255,231,0.98)"
-          : "rgba(220,247,255,0.98)";
+      ctx.fillStyle = "rgba(190,255,231,0.98)";
+      timeLines.forEach(line => {
+        ctx.fillText(line, textX, cursorY);
+        cursorY += lineGapMeta;
+      });
 
+      // UTM + ACC
+      ctx.fillStyle = "rgba(220,247,255,0.98)";
+      utmLines.forEach(line => {
         ctx.fillText(line, textX, cursorY);
         cursorY += lineGapMeta;
       });
