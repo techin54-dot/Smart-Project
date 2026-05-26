@@ -9,7 +9,6 @@
     :root{
       --green:#39f2a2;
       --cyan:#4cc9ff;
-      --blue:#2563eb;
       --line:rgba(255,255,255,.15);
       --shadow:0 14px 36px rgba(0,0,0,.36);
     }
@@ -67,7 +66,7 @@
       pointer-events:none;
       background:linear-gradient(90deg,transparent,rgba(76,201,255,.78),transparent);
       box-shadow:0 0 18px rgba(76,201,255,.55);
-      opacity:.38;
+      opacity:.30;
       animation:scanMove 5.5s linear infinite;
     }
 
@@ -909,6 +908,9 @@
           : `ACC -`;
 
       const isLandscape = width > height;
+
+      drawTopLeftLogo(ctx, width, height, isLandscape);
+
       const boxHeight = Math.round(height * 0.30);
       const boxWidth = isLandscape ? Math.round(width * 0.60) : Math.round(width * 0.92);
 
@@ -917,7 +919,6 @@
       const y = height - boxHeight - margin;
       const padding = Math.round(boxHeight * 0.07);
 
-      const brandH = Math.round(boxHeight * 0.14);
       const nameFont = Math.max(18, Math.round(boxHeight * 0.095));
       const detailFont = Math.max(16, Math.round(boxHeight * 0.078));
       const metaFont = Math.max(15, Math.round(boxHeight * 0.070));
@@ -928,14 +929,6 @@
       drawGlassBox(ctx, x, y, boxWidth, boxHeight, Math.round(padding * 0.9));
 
       let cursorY = y + padding;
-
-      if (logoImage) {
-        const logoDrawn = drawLogoFit(ctx, logoImage, textX, cursorY, Math.round(boxWidth * 0.46), brandH);
-        cursorY += logoDrawn.height + Math.round(padding * 0.35);
-      } else {
-        const badgeDrawn = drawSmartCAMBadge(ctx, textX, cursorY, Math.round(boxWidth * 0.42), brandH);
-        cursorY += badgeDrawn.height + Math.round(padding * 0.35);
-      }
 
       ctx.textBaseline = "top";
 
@@ -974,12 +967,27 @@
           metaStartY + Math.round(metaFont * 1.25) + index * Math.round(metaFont * 1.15)
         );
       });
+    }
 
-      const glow = ctx.createLinearGradient(x + padding, y + 10, x + boxWidth - padding, y + 10);
-      glow.addColorStop(0, "rgba(57,242,162,0.95)");
-      glow.addColorStop(1, "rgba(76,201,255,0.95)");
-      ctx.fillStyle = glow;
-      ctx.fillRect(x + padding, y + 12, Math.round(boxWidth * 0.26), 4);
+    function drawTopLeftLogo(ctx, width, height, isLandscape) {
+      const margin = Math.round(Math.min(width, height) * 0.035);
+
+      const maxW = isLandscape
+        ? Math.round(width * 0.25)
+        : Math.round(width * 0.38);
+
+      const maxH = isLandscape
+        ? Math.round(height * 0.12)
+        : Math.round(height * 0.10);
+
+      const x = margin;
+      const y = margin;
+
+      if (logoImage) {
+        drawLogoFit(ctx, logoImage, x, y, maxW, maxH);
+      } else {
+        drawSmartCAMBadge(ctx, x, y, maxW, maxH);
+      }
     }
 
     function drawLogoFit(ctx, img, x, y, maxW, maxH) {
