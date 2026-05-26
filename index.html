@@ -1160,22 +1160,64 @@
 
       drawTopLeftLogo(ctx, width, height, isLandscape);
 
-      const boxHeight = Math.round(height * 0.30);
-      const boxWidth = isLandscape ? Math.round(width * 0.60) : Math.round(width * 0.92);
-
       const margin = Math.round(Math.min(width, height) * 0.03);
-      const x = margin;
-      const y = height - boxHeight - margin;
-      const padding = Math.round(boxHeight * 0.07);
 
-      const nameFont = Math.max(18, Math.round(boxHeight * 0.095));
-      const detailFont = Math.max(16, Math.round(boxHeight * 0.078));
-      const metaFont = Math.max(15, Math.round(boxHeight * 0.070));
+      const boxWidth = isLandscape
+        ? Math.round(width * 0.58)
+        : Math.round(width * 0.92);
 
-      const textX = x + padding;
+      const baseSize = Math.min(width, height);
+
+      const nameFont = isLandscape
+        ? Math.max(18, Math.round(baseSize * 0.036))
+        : Math.max(24, Math.round(baseSize * 0.040));
+
+      const detailFont = isLandscape
+        ? Math.max(16, Math.round(baseSize * 0.030))
+        : Math.max(21, Math.round(baseSize * 0.034));
+
+      const metaFont = isLandscape
+        ? Math.max(15, Math.round(baseSize * 0.028))
+        : Math.max(19, Math.round(baseSize * 0.031));
+
+      const padding = Math.round(baseSize * 0.030);
+      const lineGapName = Math.round(nameFont * 1.22);
+      const lineGapDetail = Math.round(detailFont * 1.18);
+      const lineGapMeta = Math.round(metaFont * 1.18);
+
       const textMaxWidth = boxWidth - padding * 2;
 
-      drawGlassBox(ctx, x, y, boxWidth, boxHeight, Math.round(padding * 0.9));
+      ctx.font = `800 ${nameFont}px Arial, sans-serif`;
+      const nameLines = wrapText(ctx, `ชื่อ: ${nameText}`, textMaxWidth).slice(0, 1);
+
+      ctx.font = `700 ${detailFont}px Arial, sans-serif`;
+      const detailLines = wrapText(ctx, `รายละเอียด: ${detailText}`, textMaxWidth).slice(0, 2);
+
+      ctx.font = `800 ${metaFont}px Arial, sans-serif`;
+      const metaLines = [
+        `เวลา: ${timeText}`,
+        ...wrapText(ctx, `${utmLine}  ${accLine}`, textMaxWidth).slice(0, 2)
+      ];
+
+      let contentHeight = 0;
+      contentHeight += nameLines.length * lineGapName;
+      contentHeight += detailLines.length * lineGapDetail;
+      contentHeight += Math.round(metaFont * 0.45);
+      contentHeight += metaLines.length * lineGapMeta;
+
+      let boxHeight = contentHeight + padding * 2;
+
+      const minBoxHeight = Math.round(height * 0.12);
+      const maxBoxHeight = Math.round(height * 0.34);
+
+      boxHeight = Math.max(minBoxHeight, boxHeight);
+      boxHeight = Math.min(maxBoxHeight, boxHeight);
+
+      const x = margin;
+      const y = height - boxHeight - margin;
+      const textX = x + padding;
+
+      drawGlassBox(ctx, x, y, boxWidth, boxHeight, Math.round(padding * 0.8));
 
       let cursorY = y + padding;
 
@@ -1183,38 +1225,28 @@
 
       ctx.font = `800 ${nameFont}px Arial, sans-serif`;
       ctx.fillStyle = "rgba(255,255,255,0.98)";
-      const nameLine = wrapText(ctx, `ชื่อ: ${nameText}`, textMaxWidth).slice(0, 1);
-      ctx.fillText(nameLine[0] || "ชื่อ: -", textX, cursorY);
-      cursorY += Math.round(nameFont * 1.22);
+      nameLines.forEach(line => {
+        ctx.fillText(line, textX, cursorY);
+        cursorY += lineGapName;
+      });
 
       ctx.font = `700 ${detailFont}px Arial, sans-serif`;
       ctx.fillStyle = "rgba(255,255,255,0.95)";
-      const detailLines = wrapText(ctx, `รายละเอียด: ${detailText}`, textMaxWidth).slice(0, 2);
-
-      detailLines.forEach((line) => {
+      detailLines.forEach(line => {
         ctx.fillText(line, textX, cursorY);
-        cursorY += Math.round(detailFont * 1.20);
+        cursorY += lineGapDetail;
       });
 
-      const metaBlockHeight = Math.round(metaFont * 2.55);
-      const metaStartY = y + boxHeight - padding - metaBlockHeight;
+      cursorY += Math.round(metaFont * 0.45);
 
       ctx.font = `800 ${metaFont}px Arial, sans-serif`;
-      ctx.fillStyle = "rgba(190,255,231,0.98)";
-      ctx.fillText(`เวลา: ${timeText}`, textX, metaStartY);
-
-      ctx.font = `800 ${metaFont}px Arial, sans-serif`;
-      ctx.fillStyle = "rgba(220,247,255,0.98)";
-
-      const compactUtmAcc = `${utmLine}  ${accLine}`;
-      const metaLines = wrapText(ctx, compactUtmAcc, textMaxWidth).slice(0, 2);
-
       metaLines.forEach((line, index) => {
-        ctx.fillText(
-          line,
-          textX,
-          metaStartY + Math.round(metaFont * 1.25) + index * Math.round(metaFont * 1.15)
-        );
+        ctx.fillStyle = index === 0
+          ? "rgba(190,255,231,0.98)"
+          : "rgba(220,247,255,0.98)";
+
+        ctx.fillText(line, textX, cursorY);
+        cursorY += lineGapMeta;
       });
     }
 
