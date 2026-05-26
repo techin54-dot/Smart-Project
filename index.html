@@ -67,7 +67,7 @@
       pointer-events:none;
       background:linear-gradient(90deg,transparent,rgba(76,201,255,.78),transparent);
       box-shadow:0 0 18px rgba(76,201,255,.55);
-      opacity:.30;
+      opacity:.25;
       animation:scanMove 5.5s linear infinite;
     }
 
@@ -610,6 +610,12 @@
       margin-top:12px;
     }
 
+    .preview-actions button{
+      font-size:15px;
+      padding:14px 12px;
+      border-radius:18px;
+    }
+
     .preview-hint{
       margin-top:10px;
       padding:10px 12px;
@@ -724,8 +730,8 @@
     <div id="saveToast" class="save-toast">
       <div class="save-toast-icon">✓</div>
       <div>
-        <div class="save-toast-title">บันทึกรูปภาพแล้ว</div>
-        <div id="saveToastText" class="save-toast-text">ไฟล์ถูกบันทึกลงอุปกรณ์เรียบร้อย</div>
+        <div class="save-toast-title">ดำเนินการสำเร็จ</div>
+        <div id="saveToastText" class="save-toast-text">บันทึกหรือแชร์รูปภาพเรียบร้อย</div>
       </div>
     </div>
 
@@ -740,15 +746,15 @@
 
         <div class="preview-actions">
           <button class="btn-green" onclick="savePreviewImage()">
-            บันทึกรูปภาพ
+            บันทึกลงเครื่อง
           </button>
 
           <button class="btn-blue" onclick="sharePreviewImage()">
-            แชร์
+            แชร์รูปภาพ
           </button>
 
-          <button class="btn-blue" onclick="closePreviewModal()">
-            ปิด
+          <button class="btn-blue" onclick="backToCamera()">
+            กลับไปถ่ายใหม่
           </button>
         </div>
 
@@ -1165,7 +1171,7 @@
 
     function showSaveSuccess(fileName) {
       if (saveToastText) {
-        saveToastText.textContent = fileName || "ไฟล์ถูกบันทึกลงอุปกรณ์เรียบร้อย";
+        saveToastText.textContent = fileName || "ดำเนินการเรียบร้อย";
       }
 
       if (saveToast) {
@@ -1213,6 +1219,15 @@
       if (previewModal) {
         previewModal.classList.add("hide");
       }
+    }
+
+    function backToCamera() {
+      if (previewModal) {
+        previewModal.classList.add("hide");
+      }
+
+      statusBox.className = "status-pill";
+      statusBox.textContent = "พร้อมถ่ายภาพใหม่";
     }
 
     function savePreviewImage() {
@@ -1265,6 +1280,7 @@
             files: [file]
           });
 
+          showSaveSuccess("แชร์รูปภาพแล้ว");
           statusBox.className = "status-pill";
           statusBox.textContent = "แชร์รูปภาพแล้ว";
           return;
@@ -1276,6 +1292,7 @@
             text: "รูปภาพจาก SmartCAM"
           });
 
+          showSaveSuccess("แชร์ข้อมูลแล้ว");
           statusBox.className = "status-pill";
           statusBox.textContent = "แชร์ข้อมูลแล้ว";
           return;
@@ -1349,7 +1366,10 @@
           }
 
           const fileName = createFileName(captureTime);
+
+          // แสดง Preview ทุกอุปกรณ์เสมอ
           showPreviewModal(blob, fileName);
+
         }, "image/jpeg", 0.94);
 
       } catch (error) {
@@ -1382,23 +1402,23 @@
       const margin = Math.round(baseSize * 0.03);
 
       const boxWidth = isLandscape
-        ? Math.round(width * 0.58)
+        ? Math.round(width * 0.62)
         : Math.round(width * 0.92);
 
       const nameFont = isLandscape
-        ? Math.max(22, Math.round(baseSize * 0.043))
-        : Math.max(30, Math.round(baseSize * 0.050));
+        ? Math.max(28, Math.round(baseSize * 0.052))
+        : Math.max(38, Math.round(baseSize * 0.062));
 
       const detailFont = isLandscape
-        ? Math.max(20, Math.round(baseSize * 0.038))
-        : Math.max(27, Math.round(baseSize * 0.044));
+        ? Math.max(25, Math.round(baseSize * 0.047))
+        : Math.max(34, Math.round(baseSize * 0.055));
 
       const metaFont = isLandscape
-        ? Math.max(19, Math.round(baseSize * 0.035))
-        : Math.max(25, Math.round(baseSize * 0.040));
+        ? Math.max(23, Math.round(baseSize * 0.043))
+        : Math.max(31, Math.round(baseSize * 0.050));
 
-      const paddingX = Math.round(baseSize * 0.030);
-      const paddingY = Math.round(baseSize * 0.024);
+      const paddingX = Math.round(baseSize * 0.032);
+      const paddingY = Math.round(baseSize * 0.026);
       const textMaxWidth = boxWidth - paddingX * 2;
 
       ctx.font = `800 ${nameFont}px Arial, sans-serif`;
@@ -1411,10 +1431,10 @@
       const timeLines = [`เวลา: ${timeText}`];
       const utmLines = wrapText(ctx, `${utmLine}  ${accLine}`, textMaxWidth).slice(0, 2);
 
-      const lineGapName = Math.round(nameFont * 1.18);
-      const lineGapDetail = Math.round(detailFont * 1.16);
-      const lineGapMeta = Math.round(metaFont * 1.16);
-      const sectionGap = Math.round(metaFont * 0.42);
+      const lineGapName = Math.round(nameFont * 1.20);
+      const lineGapDetail = Math.round(detailFont * 1.18);
+      const lineGapMeta = Math.round(metaFont * 1.18);
+      const sectionGap = Math.round(metaFont * 0.48);
 
       let contentHeight = 0;
       contentHeight += nameLines.length * lineGapName;
@@ -1425,7 +1445,7 @@
 
       let boxHeight = contentHeight + paddingY * 2;
 
-      const maxBoxHeight = Math.round(height * 0.34);
+      const maxBoxHeight = Math.round(height * 0.40);
       boxHeight = Math.min(boxHeight, maxBoxHeight);
 
       const x = margin;
