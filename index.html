@@ -9,6 +9,7 @@
     :root{
       --green:#39f2a2;
       --cyan:#4cc9ff;
+      --blue:#2563eb;
       --line:rgba(255,255,255,.15);
       --shadow:0 14px 36px rgba(0,0,0,.36);
     }
@@ -153,7 +154,7 @@
       position:fixed;
       left:12px;
       right:12px;
-      bottom:calc(92px + env(safe-area-inset-bottom));
+      bottom:calc(100px + env(safe-area-inset-bottom));
       z-index:13;
       max-width:540px;
       margin:0 auto;
@@ -222,14 +223,14 @@
       right:0;
       bottom:0;
       z-index:14;
-      max-width:640px;
+      max-width:660px;
       margin:0 auto;
       padding:10px 12px calc(12px + env(safe-area-inset-bottom));
       display:grid;
-      grid-template-columns:1fr 78px 1fr;
+      grid-template-columns:1fr 92px 1fr;
       align-items:center;
       gap:10px;
-      background:linear-gradient(to top,rgba(0,0,0,.82),transparent);
+      background:linear-gradient(to top,rgba(0,0,0,.86),transparent);
     }
 
     button{
@@ -256,22 +257,185 @@
     }
 
     .capture-btn{
-      width:78px;
-      height:78px;
+      width:92px;
+      height:92px;
       border-radius:50%;
       padding:0;
-      background:rgba(255,255,255,.96);
-      border:6px solid rgba(255,255,255,.28);
       position:relative;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      gap:3px;
+      background:
+        radial-gradient(circle at 35% 28%, #ffffff 0%, #f8fafc 36%, #dbeafe 100%);
+      border:5px solid rgba(255,255,255,.76);
+      box-shadow:
+        0 0 0 5px rgba(0,0,0,.34),
+        0 0 26px rgba(76,201,255,.48),
+        inset 0 -8px 18px rgba(37,99,235,.20);
+      color:#0f172a;
+      overflow:hidden;
     }
 
-    .capture-btn::before{
+    .capture-btn::after{
       content:"";
       position:absolute;
-      inset:11px;
+      inset:8px;
       border-radius:50%;
-      background:radial-gradient(circle at 35% 35%,#ff9a9a 0%,#ef4444 48%,#c91414 100%);
-      box-shadow:inset 0 0 0 1px rgba(255,255,255,.34);
+      border:2px solid rgba(15,23,42,.18);
+      pointer-events:none;
+    }
+
+    .capture-btn:active{
+      transform:scale(.94);
+      box-shadow:
+        0 0 0 5px rgba(0,0,0,.40),
+        0 0 18px rgba(57,242,162,.65),
+        inset 0 -6px 16px rgba(37,99,235,.26);
+    }
+
+    .camera-icon{
+      width:40px;
+      height:30px;
+      border-radius:8px;
+      background:linear-gradient(180deg,#0f172a,#1e293b);
+      position:relative;
+      display:grid;
+      place-items:center;
+      box-shadow:inset 0 0 0 2px rgba(255,255,255,.12);
+      z-index:2;
+    }
+
+    .camera-icon::before{
+      content:"";
+      position:absolute;
+      top:-6px;
+      left:8px;
+      width:17px;
+      height:8px;
+      border-radius:5px 5px 0 0;
+      background:#0f172a;
+    }
+
+    .camera-icon::after{
+      content:"";
+      position:absolute;
+      top:5px;
+      right:5px;
+      width:5px;
+      height:5px;
+      border-radius:50%;
+      background:#39f2a2;
+      box-shadow:0 0 8px rgba(57,242,162,.8);
+    }
+
+    .camera-lens{
+      width:17px;
+      height:17px;
+      border-radius:50%;
+      background:
+        radial-gradient(circle,#4cc9ff 0%,#2563eb 45%,#0f172a 70%);
+      border:2px solid rgba(255,255,255,.75);
+    }
+
+    .capture-label{
+      font-size:10px;
+      font-weight:900;
+      line-height:1;
+      color:#0f172a;
+      z-index:2;
+    }
+
+    .capture-btn.saving{
+      pointer-events:none;
+      opacity:.82;
+      animation:capturePulse .75s ease-in-out infinite alternate;
+    }
+
+    .capture-btn.saving .capture-label{
+      font-size:9px;
+    }
+
+    @keyframes capturePulse{
+      from{ transform:scale(1); }
+      to{ transform:scale(.96); }
+    }
+
+    .screen-flash{
+      position:fixed;
+      inset:0;
+      z-index:80;
+      background:#ffffff;
+      opacity:0;
+      pointer-events:none;
+    }
+
+    .screen-flash.active{
+      animation:flashShot .34s ease-out;
+    }
+
+    @keyframes flashShot{
+      0%{opacity:0;}
+      18%{opacity:.82;}
+      100%{opacity:0;}
+    }
+
+    .save-toast{
+      position:fixed;
+      left:50%;
+      bottom:calc(122px + env(safe-area-inset-bottom));
+      transform:translateX(-50%) translateY(20px);
+      z-index:90;
+      min-width:min(92vw,370px);
+      display:flex;
+      align-items:center;
+      gap:12px;
+      padding:13px 15px;
+      border-radius:18px;
+      background:linear-gradient(135deg,rgba(5,18,16,.94),rgba(8,30,45,.92));
+      border:1px solid rgba(57,242,162,.35);
+      box-shadow:0 16px 42px rgba(0,0,0,.46), 0 0 24px rgba(57,242,162,.18);
+      backdrop-filter:blur(16px);
+      -webkit-backdrop-filter:blur(16px);
+      opacity:0;
+      pointer-events:none;
+      transition:.28s ease;
+    }
+
+    .save-toast.show{
+      opacity:1;
+      transform:translateX(-50%) translateY(0);
+    }
+
+    .save-toast-icon{
+      width:38px;
+      height:38px;
+      border-radius:50%;
+      display:grid;
+      place-items:center;
+      flex:0 0 auto;
+      font-size:24px;
+      font-weight:900;
+      color:#042014;
+      background:linear-gradient(135deg,#39f2a2,#4cc9ff);
+      box-shadow:0 0 18px rgba(57,242,162,.36);
+    }
+
+    .save-toast-title{
+      font-size:15px;
+      font-weight:900;
+      color:#ffffff;
+    }
+
+    .save-toast-text{
+      margin-top:2px;
+      font-size:12px;
+      color:rgba(255,255,255,.76);
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      max-width:280px;
     }
 
     #canvas{display:none}
@@ -392,7 +556,7 @@
         right:calc(14px + env(safe-area-inset-right));
         width:min(410px,38vw);
         max-width:none;
-        bottom:calc(92px + env(safe-area-inset-bottom));
+        bottom:calc(104px + env(safe-area-inset-bottom));
       }
 
       textarea{
@@ -401,7 +565,7 @@
       }
 
       .button-bar{
-        width:min(580px,70vw);
+        width:min(600px,70vw);
       }
     }
 
@@ -425,6 +589,11 @@
       }
 
       .readonly-box{font-size:11px}
+
+      .capture-btn{
+        width:86px;
+        height:86px;
+      }
     }
   </style>
 </head>
@@ -464,11 +633,28 @@
 
     <div class="button-bar">
       <button class="btn-blue" onclick="switchCamera()">สลับกล้อง</button>
-      <button class="capture-btn" onclick="captureAndSave()" aria-label="ถ่ายภาพ"></button>
+
+      <button id="captureButton" class="capture-btn" onclick="captureAndSave()" aria-label="ถ่ายภาพ">
+        <span class="camera-icon">
+          <span class="camera-lens"></span>
+        </span>
+        <span class="capture-label">ถ่ายภาพ</span>
+      </button>
+
       <button class="btn-green" onclick="refreshLocation()">พิกัดใหม่</button>
     </div>
 
     <canvas id="canvas"></canvas>
+
+    <div id="screenFlash" class="screen-flash"></div>
+
+    <div id="saveToast" class="save-toast">
+      <div class="save-toast-icon">✓</div>
+      <div>
+        <div class="save-toast-title">บันทึกรูปภาพแล้ว</div>
+        <div id="saveToastText" class="save-toast-text">ไฟล์ถูกบันทึกลงอุปกรณ์เรียบร้อย</div>
+      </div>
+    </div>
   </div>
 
   <div id="startModal" class="modal">
@@ -543,6 +729,11 @@
 
     const video = document.getElementById("video");
     const canvas = document.getElementById("canvas");
+    const captureButton = document.getElementById("captureButton");
+    const screenFlash = document.getElementById("screenFlash");
+    const saveToast = document.getElementById("saveToast");
+    const saveToastText = document.getElementById("saveToastText");
+
     const statusBox = document.getElementById("statusBox");
     const readonlyData = document.getElementById("readonlyData");
     const startModal = document.getElementById("startModal");
@@ -833,63 +1024,121 @@
       refreshLocation();
     }
 
+    function playCaptureFlash() {
+      if (!screenFlash) return;
+
+      screenFlash.classList.remove("active");
+      void screenFlash.offsetWidth;
+      screenFlash.classList.add("active");
+    }
+
+    function setCaptureSaving(isSaving) {
+      if (!captureButton) return;
+
+      const label = captureButton.querySelector(".capture-label");
+
+      if (isSaving) {
+        captureButton.classList.add("saving");
+        captureButton.setAttribute("disabled", "disabled");
+        if (label) label.textContent = "บันทึก";
+      } else {
+        captureButton.classList.remove("saving");
+        captureButton.removeAttribute("disabled");
+        if (label) label.textContent = "ถ่ายภาพ";
+      }
+    }
+
+    function showSaveSuccess(fileName) {
+      if (saveToastText) {
+        saveToastText.textContent = fileName || "ไฟล์ถูกบันทึกลงอุปกรณ์เรียบร้อย";
+      }
+
+      if (saveToast) {
+        saveToast.classList.add("show");
+
+        setTimeout(() => {
+          saveToast.classList.remove("show");
+        }, 2600);
+      }
+
+      if (navigator.vibrate) {
+        navigator.vibrate([80, 40, 80]);
+      }
+    }
+
     async function captureAndSave() {
       if (!currentPosition || !currentUTM) {
         alert("ยังไม่มีพิกัด UTM กรุณากดพิกัดใหม่ก่อนถ่ายภาพ");
         return;
       }
 
-      const captureTime = new Date();
+      playCaptureFlash();
+      setCaptureSaving(true);
 
-      let sourceWidth = 0;
-      let sourceHeight = 0;
+      try {
+        const captureTime = new Date();
 
-      if (loadedImageElement) {
-        sourceWidth = loadedImageElement.naturalWidth;
-        sourceHeight = loadedImageElement.naturalHeight;
-      } else {
-        if (!stream) {
-          alert("ยังไม่มีกล้อง กรุณาเปิดกล้องหรือเลือกรูปจากกล้องก่อน");
+        let sourceWidth = 0;
+        let sourceHeight = 0;
+
+        if (loadedImageElement) {
+          sourceWidth = loadedImageElement.naturalWidth;
+          sourceHeight = loadedImageElement.naturalHeight;
+        } else {
+          if (!stream) {
+            setCaptureSaving(false);
+            alert("ยังไม่มีกล้อง กรุณาเปิดกล้องหรือเลือกรูปจากกล้องก่อน");
+            return;
+          }
+
+          sourceWidth = video.videoWidth;
+          sourceHeight = video.videoHeight;
+        }
+
+        if (!sourceWidth || !sourceHeight) {
+          setCaptureSaving(false);
+          alert("กล้องยังไม่พร้อม กรุณารอสักครู่แล้วลองใหม่");
           return;
         }
 
-        sourceWidth = video.videoWidth;
-        sourceHeight = video.videoHeight;
-      }
+        const maxWidth = 1920;
+        const scale = sourceWidth > maxWidth ? maxWidth / sourceWidth : 1;
 
-      if (!sourceWidth || !sourceHeight) {
-        alert("กล้องยังไม่พร้อม กรุณารอสักครู่แล้วลองใหม่");
-        return;
-      }
+        canvas.width = Math.round(sourceWidth * scale);
+        canvas.height = Math.round(sourceHeight * scale);
 
-      const maxWidth = 1920;
-      const scale = sourceWidth > maxWidth ? maxWidth / sourceWidth : 1;
+        const ctx = canvas.getContext("2d");
 
-      canvas.width = Math.round(sourceWidth * scale);
-      canvas.height = Math.round(sourceHeight * scale);
-
-      const ctx = canvas.getContext("2d");
-
-      if (loadedImageElement) {
-        ctx.drawImage(loadedImageElement, 0, 0, canvas.width, canvas.height);
-      } else {
-        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-      }
-
-      drawDataOnPhoto(ctx, canvas.width, canvas.height, captureTime);
-
-      canvas.toBlob((blob) => {
-        if (!blob) {
-          alert("ไม่สามารถสร้างไฟล์ภาพได้");
-          return;
+        if (loadedImageElement) {
+          ctx.drawImage(loadedImageElement, 0, 0, canvas.width, canvas.height);
+        } else {
+          ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
         }
 
-        const fileName = createFileName(captureTime);
-        saveBlobToDevice(blob, fileName);
+        drawDataOnPhoto(ctx, canvas.width, canvas.height, captureTime);
 
-        statusBox.className = "status-pill";
-        statusBox.textContent = `บันทึกภาพแล้ว: ${fileName}`;
-      }, "image/jpeg", 0.94);
+        canvas.toBlob((blob) => {
+          if (!blob) {
+            setCaptureSaving(false);
+            alert("ไม่สามารถสร้างไฟล์ภาพได้");
+            return;
+          }
+
+          const fileName = createFileName(captureTime);
+          saveBlobToDevice(blob, fileName);
+
+          setCaptureSaving(false);
+          showSaveSuccess(fileName);
+
+          statusBox.className = "status-pill";
+          statusBox.textContent = `บันทึกภาพแล้ว: ${fileName}`;
+        }, "image/jpeg", 0.94);
+
+      } catch (error) {
+        console.error(error);
+        setCaptureSaving(false);
+        alert("เกิดข้อผิดพลาดระหว่างบันทึกรูปภาพ");
+      }
     }
 
     function drawDataOnPhoto(ctx, width, height, captureTime) {
