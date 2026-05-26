@@ -9,7 +9,6 @@
     :root{
       --green:#39f2a2;
       --cyan:#4cc9ff;
-      --blue:#2563eb;
       --line:rgba(255,255,255,.15);
       --shadow:0 14px 36px rgba(0,0,0,.36);
     }
@@ -592,15 +591,44 @@
       margin-bottom:12px;
     }
 
+    .preview-image-wrap{
+      position:relative;
+      width:100%;
+      border-radius:16px;
+      overflow:hidden;
+      background:#000;
+      border:1px solid rgba(255,255,255,.16);
+    }
+
     .preview-image{
       width:100%;
       max-height:58vh;
       object-fit:contain;
-      border-radius:16px;
-      border:1px solid rgba(255,255,255,.16);
+      display:block;
       background:#000;
       -webkit-touch-callout:default;
       user-select:auto;
+    }
+
+    .tap-save-overlay{
+      position:absolute;
+      left:50%;
+      bottom:14px;
+      transform:translateX(-50%);
+      z-index:2;
+      padding:9px 14px;
+      border-radius:999px;
+      background:rgba(0,0,0,.68);
+      color:#ffffff;
+      font-size:14px;
+      font-weight:900;
+      line-height:1.2;
+      white-space:nowrap;
+      border:1px solid rgba(255,255,255,.25);
+      backdrop-filter:blur(10px);
+      -webkit-backdrop-filter:blur(10px);
+      box-shadow:0 8px 24px rgba(0,0,0,.35);
+      display:none;
     }
 
     .preview-actions{
@@ -738,14 +766,17 @@
     <div id="previewModal" class="preview-modal hide">
       <div class="preview-card">
         <div class="preview-title">ตัวอย่างรูปภาพที่ประทับข้อมูลแล้ว</div>
-        <div class="preview-note">
-          ตรวจสอบรูปภาพก่อนบันทึกหรือแชร์
+        <div class="preview-note">ตรวจสอบรูปภาพก่อนบันทึกหรือแชร์</div>
+
+        <div class="preview-image-wrap">
+          <img id="previewImage" class="preview-image" alt="SmartCAM Preview">
+          <div id="tapSaveOverlay" class="tap-save-overlay">
+            แตะค้างที่รูปภาพเพื่อบันทึก
+          </div>
         </div>
 
-        <img id="previewImage" class="preview-image" alt="SmartCAM Preview">
-
         <div class="preview-actions">
-          <button class="btn-green" onclick="savePreviewImage()">
+          <button id="saveImageButton" class="btn-green" onclick="savePreviewImage()">
             บันทึกลงเครื่อง
           </button>
 
@@ -759,7 +790,7 @@
         </div>
 
         <div id="iosSaveHint" class="preview-hint">
-          หากใช้ iPhone / iPad แล้วปุ่มบันทึกไม่ทำงาน ให้แตะค้างที่รูปภาพ แล้วเลือก “บันทึกรูปภาพ”
+          หากใช้ iPhone / iPad ให้แตะค้างที่รูปภาพ แล้วเลือก “บันทึกรูปภาพ” หรือใช้ปุ่มแชร์รูปภาพ
         </div>
       </div>
     </div>
@@ -845,6 +876,8 @@
     const previewModal = document.getElementById("previewModal");
     const previewImage = document.getElementById("previewImage");
     const iosSaveHint = document.getElementById("iosSaveHint");
+    const tapSaveOverlay = document.getElementById("tapSaveOverlay");
+    const saveImageButton = document.getElementById("saveImageButton");
 
     const statusBox = document.getElementById("statusBox");
     const readonlyData = document.getElementById("readonlyData");
@@ -1169,9 +1202,9 @@
       }
     }
 
-    function showSaveSuccess(fileName) {
+    function showSaveSuccess(message) {
       if (saveToastText) {
-        saveToastText.textContent = fileName || "ดำเนินการเรียบร้อย";
+        saveToastText.textContent = message || "ดำเนินการเรียบร้อย";
       }
 
       if (saveToast) {
@@ -1201,8 +1234,18 @@
         previewImage.src = latestImageUrl;
       }
 
+      const isIOSNow = isIOSDevice();
+
       if (iosSaveHint) {
-        iosSaveHint.style.display = isIOSDevice() ? "block" : "none";
+        iosSaveHint.style.display = isIOSNow ? "block" : "none";
+      }
+
+      if (tapSaveOverlay) {
+        tapSaveOverlay.style.display = isIOSNow ? "block" : "none";
+      }
+
+      if (saveImageButton) {
+        saveImageButton.style.display = isIOSNow ? "none" : "block";
       }
 
       if (previewModal) {
@@ -1212,7 +1255,9 @@
       setCaptureSaving(false);
 
       statusBox.className = "status-pill";
-      statusBox.textContent = "สร้างรูปภาพแล้ว กรุณาบันทึกหรือแชร์";
+      statusBox.textContent = isIOSNow
+        ? "แตะค้างที่รูปเพื่อบันทึก หรือกดแชร์รูปภาพ"
+        : "สร้างรูปภาพแล้ว กรุณาบันทึกหรือแชร์";
     }
 
     function closePreviewModal() {
@@ -1252,14 +1297,10 @@
         URL.revokeObjectURL(url);
       }, 1500);
 
-      showSaveSuccess(latestFileName);
+      showSaveSuccess(`บันทึกภาพแล้ว: ${latestFileName}`);
 
       statusBox.className = "status-pill";
       statusBox.textContent = `บันทึกภาพแล้ว: ${latestFileName}`;
-
-      if (isIOSDevice()) {
-        alert("หาก iPhone / iPad ไม่บันทึกอัตโนมัติ ให้แตะค้างที่รูปตัวอย่าง แล้วเลือก “บันทึกรูปภาพ”");
-      }
     }
 
     async function sharePreviewImage() {
@@ -1298,7 +1339,7 @@
           return;
         }
 
-        alert("อุปกรณ์หรือเบราว์เซอร์นี้ยังไม่รองรับการแชร์โดยตรง กรุณาบันทึกรูปก่อน");
+        alert("อุปกรณ์หรือเบราว์เซอร์นี้ยังไม่รองรับการแชร์โดยตรง");
       } catch (error) {
         console.error(error);
         if (error.name !== "AbortError") {
@@ -1366,10 +1407,7 @@
           }
 
           const fileName = createFileName(captureTime);
-
-          // แสดง Preview ทุกอุปกรณ์เสมอ
           showPreviewModal(blob, fileName);
-
         }, "image/jpeg", 0.94);
 
       } catch (error) {
@@ -1429,7 +1467,12 @@
 
       ctx.font = `800 ${metaFont}px Arial, sans-serif`;
       const timeLines = [`เวลา: ${timeText}`];
-      const utmLines = wrapText(ctx, `${utmLine}  ${accLine}`, textMaxWidth).slice(0, 2);
+
+      // แยก ACC ลงบรรทัดใหม่
+      const utmLines = [
+        utmLine,
+        accLine
+      ];
 
       const lineGapName = Math.round(nameFont * 1.20);
       const lineGapDetail = Math.round(detailFont * 1.18);
@@ -1445,7 +1488,7 @@
 
       let boxHeight = contentHeight + paddingY * 2;
 
-      const maxBoxHeight = Math.round(height * 0.40);
+      const maxBoxHeight = Math.round(height * 0.42);
       boxHeight = Math.min(boxHeight, maxBoxHeight);
 
       const x = margin;
@@ -1481,7 +1524,7 @@
       });
 
       ctx.fillStyle = "rgba(220,247,255,0.98)";
-      utmLines.forEach(line => {
+      utmLines.forEach((line, index) => {
         ctx.fillText(line, textX, cursorY);
         cursorY += lineGapMeta;
       });
